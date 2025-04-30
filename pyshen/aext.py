@@ -1,0 +1,29 @@
+"""
+From https://gist.github.com/dmfigol/3e7d5b84a16d076df02baa9f53271058
+"""
+
+import asyncio
+from asyncio import AbstractEventLoop
+from collections.abc import Coroutine
+from concurrent.futures import Future
+from threading import Thread
+from typing import Any
+
+
+def create_event_loop_thread() -> AbstractEventLoop:
+    def start_background_loop(loop: AbstractEventLoop) -> None:
+        asyncio.set_event_loop(loop)
+        loop.run_forever()
+
+    eventloop = asyncio.new_event_loop()
+    thread = Thread(target=start_background_loop, args=(eventloop,), daemon=True)
+    thread.start()
+    return eventloop
+
+
+def run_coro_in_thread[T](
+    loop: None | AbstractEventLoop, coro: Coroutine[Any, Any, T]
+) -> Future[T]:
+    if loop is None:
+        loop = create_event_loop_thread()
+    return asyncio.run_coroutine_threadsafe(coro, loop)
