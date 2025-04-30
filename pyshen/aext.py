@@ -4,10 +4,10 @@ From https://gist.github.com/dmfigol/3e7d5b84a16d076df02baa9f53271058
 
 import asyncio
 from asyncio import AbstractEventLoop
-from collections.abc import Coroutine
+from asyncio import Future as AFuture
+from collections.abc import Awaitable
 from concurrent.futures import Future
 from threading import Thread
-from typing import Any
 
 
 def create_event_loop_thread() -> AbstractEventLoop:
@@ -22,7 +22,7 @@ def create_event_loop_thread() -> AbstractEventLoop:
 
 
 def run_coro_in_thread[T](
-    coro: Coroutine[Any, Any, T], loop: None | AbstractEventLoop = None
+    coro: AFuture[T] | Awaitable[T], loop: None | AbstractEventLoop = None
 ) -> Future[T]:
     if loop is None:
         loop = create_event_loop_thread()
