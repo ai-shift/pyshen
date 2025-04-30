@@ -4,10 +4,9 @@ import logging
 import logging.config
 import logging.handlers
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import Any, override
 
-LOG_RECORD_BUILTIN_ATTRS = {
+_LOG_RECORD_BUILTIN_ATTRS = {
     "args",
     "asctime",
     "created",
@@ -68,10 +67,45 @@ class LogsJSONFormatter(logging.Formatter):
         message.update(always_fields)
 
         for key, val in record.__dict__.items():
-            if key not in LOG_RECORD_BUILTIN_ATTRS:
+            if key not in _LOG_RECORD_BUILTIN_ATTRS:
                 message[key] = val  # noqa: PERF403
 
         return message
+
+
+_LOG_CONFIG = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "json": {
+            "()": LogsJSONFormatter,
+            "fmt_keys": {
+                "level": "levelname",
+                "message": "message",
+                "timestamp": "timestamp",
+                "logger": "name",
+                "module": "module",
+                "function": "funcName",
+                "line": "lineno",
+                "thread_name": "threadName",
+            },
+        }
+    },
+    "handlers": {
+        "stderr": {
+            "class": logging.StreamHandler,
+            "level": logging.INFO,
+            "formatter": "json",
+            "stream": "ext://sys.stderr",
+        },
+        "queue_handler": {
+            "class": logging.handlers.QueueHandler,
+            "handlers": ["stderr"],
+            "respect_handler_level": True,
+        },
+    },
+    "loggers": {"root": {"level": logging.DEBUG, "handlers": ["queue_handler"]}},
+}
 
 
 class NonErrorFilter(logging.Filter):
@@ -81,9 +115,7 @@ class NonErrorFilter(logging.Filter):
 
 
 def setup() -> None:
-    cfg_path = Path(__file__).parent / "logging.json"
-    config = json.loads(cfg_path.read_text())
-    logging.config.dictConfig(config)
+    logging.config.dictConfig(_LOG_CONFIG)
     queue_handler = logging.getHandlerByName("queue_handler")
     if queue_handler is None:
         return
