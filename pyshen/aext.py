@@ -22,7 +22,7 @@ def create_event_loop_thread() -> AbstractEventLoop:
 
 
 def run_coro_in_thread[T](
-    loop: None | AbstractEventLoop, coro: Coroutine[Any, Any, T]
+    coro: Coroutine[Any, Any, T], loop: None | AbstractEventLoop = None
 ) -> Future[T]:
     if loop is None:
         loop = create_event_loop_thread()
