@@ -1,3 +1,3 @@
-from . import aext, logging
+from . import aext, logging, meta
 
-__all__ = ["aext", "logging"]
+__all__ = ["aext", "logging", "meta"]
